@@ -9,8 +9,11 @@ exports.addStudent = async (req, res) => {
     await Student.create(req.body);
     res.status(201).json({ success: true, message: "Student added successfully" });
   } catch (err) {
+    console.error("addStudent error:", err);
     if (err.code === 11000)
       return res.status(409).json({ success: false, message: "Student ID already exists" });
+    if (err.name === "ValidationError")
+      return res.status(400).json({ success: false, message: err.message });
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -20,6 +23,7 @@ exports.getAllStudents = async (req, res) => {
     const students = await Student.find().sort({ createdAt: -1 });
     res.json({ success: true, data: students });
   } catch (err) {
+    console.error("getAllStudents error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -30,6 +34,7 @@ exports.getStudent = async (req, res) => {
     if (!student) return res.status(404).json({ success: false, message: "Student not found" });
     res.json({ success: true, data: student });
   } catch (err) {
+    console.error("getStudent error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -44,6 +49,9 @@ exports.updateStudent = async (req, res) => {
     if (!student) return res.status(404).json({ success: false, message: "Student not found" });
     res.json({ success: true, message: "Student updated successfully", data: student });
   } catch (err) {
+    console.error("updateStudent error:", err);
+    if (err.name === "ValidationError")
+      return res.status(400).json({ success: false, message: err.message });
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -54,6 +62,7 @@ exports.deleteStudent = async (req, res) => {
     if (!student) return res.status(404).json({ success: false, message: "Student not found" });
     res.json({ success: true, message: "Student deleted successfully" });
   } catch (err) {
+    console.error("deleteStudent error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
