@@ -1,22 +1,68 @@
 const Student = require("../models/Student");
 
+
 exports.addStudent = async (req, res) => {
   try {
-    const { studentId, name, email, department, semester } = req.body;
-    if (!studentId || !name || !email || !department || !semester) {
-      return res.status(400).json({ success: false, message: "All required fields must be filled" });
+    const { studentId, name, email, department, semester, contact } = req.body;
+
+    if (
+      !studentId?.trim() ||
+      !name?.trim() ||
+      !email?.trim() ||
+      !department?.trim() ||
+      semester === undefined ||
+      semester === null ||
+      semester === ""
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill all required fields"
+      });
     }
-    await Student.create(req.body);
-    res.status(201).json({ success: true, message: "Student added successfully" });
+
+    const student = await Student.create({
+      studentId: String(studentId).trim(),
+      name: String(name).trim(),
+      email: String(email).trim(),
+      department: String(department).trim(),
+      semester: Number(semester),
+      contact: contact ? String(contact).trim() : ""
+    });
+
+    console.log("Student saved:", student.studentId);
+
+    return res.status(201).json({
+      success: true,
+      message: "Student added successfully",
+      data: student
+    });
   } catch (err) {
     console.error("addStudent error:", err);
-    if (err.code === 11000)
-      return res.status(409).json({ success: false, message: "Student ID already exists" });
-    if (err.name === "ValidationError")
-      return res.status(400).json({ success: false, message: err.message });
-    res.status(500).json({ success: false, message: "Server error" });
+
+    if (err.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "Student ID already exists"
+      });
+    }
+
+    if (
+      err.name === "ValidationError" ||
+      err.name === "CastError"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: err.message
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error while adding student"
+    });
   }
 };
+
 
 exports.getAllStudents = async (req, res) => {
   try {
